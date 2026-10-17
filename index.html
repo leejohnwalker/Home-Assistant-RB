@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#1b355e">
+<title>Our Home Dashboard</title>
+<style>
+  :root { --navy:#1b355e; --amber:#fdb525; --cream:#f4f1ec; --paper:#ffffff; --ink:#17243a; --muted:#6d7787; --line:#e1e5eb; --green:#2f8b67; }
+  * { box-sizing:border-box; }
+  html, body { margin:0; padding:0; min-height:100%; background:var(--cream); color:var(--ink); font-family:-apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif; }
+  body { padding:14px; }
+  button, input { font:inherit; }
+  button { cursor:pointer; -webkit-appearance:none; appearance:none; }
+  .app { max-width:1180px; margin:0 auto; }
+  .topbar { background:var(--navy); color:#fff; border-radius:18px; padding:17px 20px; display:flex; align-items:center; justify-content:space-between; gap:16px; box-shadow:0 5px 16px rgba(18,38,68,.12); }
+  .brand { font-weight:800; letter-spacing:1.5px; font-size:25px; }
+  .tagline { color:#d7dfeb; font-size:12px; margin-top:4px; letter-spacing:.4px; }
+  .datetime { text-align:right; white-space:nowrap; }
+  #clock { font-size:28px; font-weight:750; font-variant-numeric:tabular-nums; }
+  #date { font-size:13px; color:#d7dfeb; margin-top:3px; }
+  .weather { margin-top:12px; background:#fff; border:1px solid var(--line); border-radius:13px; padding:10px 14px; display:flex; align-items:center; justify-content:space-between; gap:10px; }
+  .weather strong { color:var(--navy); }
+  .weather small { color:var(--muted); }
+  .grid { display:grid; grid-template-columns:1.08fr 1fr 1fr; gap:12px; margin-top:12px; align-items:stretch; }
+  .card { background:var(--paper); border:1px solid var(--line); border-radius:16px; padding:15px; min-width:0; box-shadow:0 2px 7px rgba(18,38,68,.035); }
+  .card h2 { font-size:15px; margin:0 0 12px; color:var(--navy); letter-spacing:.55px; text-transform:uppercase; }
+  .sub { color:var(--muted); font-size:12px; margin:-5px 0 12px; }
+  .agenda-item { display:flex; gap:10px; padding:10px 0; border-bottom:1px solid #edf0f3; align-items:flex-start; }
+  .agenda-item:last-child { border-bottom:0; }
+  .time { color:var(--navy); font-size:12px; font-weight:750; min-width:55px; padding-top:2px; }
+  .agenda-text { font-size:14px; line-height:1.35; }
+  .agenda-text small { display:block; color:var(--muted); margin-top:3px; font-size:12px; }
+  .edit-note { color:var(--muted); font-size:11px; margin-top:8px; line-height:1.4; }
+  .device-grid { display:grid; grid-template-columns:1fr 1fr; gap:9px; }
+  .device { min-height:91px; border:1px solid var(--line); border-radius:13px; padding:11px; text-align:left; background:#fafbfc; color:var(--ink); }
+  .device .emoji { font-size:22px; display:block; margin-bottom:7px; }
+  .device strong { font-size:13px; display:block; }
+  .device .state { display:block; font-size:11px; color:var(--muted); margin-top:4px; }
+  .device.on { background:#fff6df; border-color:#f5d78c; }
+  .device.on .state { color:#76540b; }
+  .list-row { display:flex; gap:8px; margin-bottom:10px; }
+  .list-row input { width:100%; min-width:0; border:1px solid var(--line); border-radius:9px; padding:10px; background:#fff; color:var(--ink); font-size:14px; }
+  .add { background:var(--navy); color:#fff; border:0; border-radius:9px; min-width:43px; font-size:23px; line-height:1; }
+  .items { list-style:none; padding:0; margin:0; }
+  .items li { display:flex; align-items:center; gap:8px; padding:8px 0; border-bottom:1px solid #edf0f3; font-size:14px; }
+  .items li:last-child { border-bottom:0; }
+  .items input[type=checkbox] { width:19px; height:19px; accent-color:var(--green); flex:0 0 auto; }
+  .items .item-text { flex:1; overflow-wrap:anywhere; }
+  .items li.done .item-text { color:#87909d; text-decoration:line-through; }
+  .delete { border:0; background:transparent; color:#9aa2ad; padding:4px 7px; font-size:18px; }
+  .empty { color:var(--muted); font-size:13px; padding:7px 0; }
+  .quick { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:12px; }
+  .scene { border:0; border-radius:13px; padding:13px 8px; background:var(--navy); color:white; font-weight:750; font-size:13px; min-height:49px; }
+  .scene:first-child { background:var(--amber); color:#30250d; }
+  .scene:active, .device:active { transform:scale(.985); }
+  .notice { margin-top:11px; color:var(--muted); text-align:center; font-size:11px; line-height:1.5; }
+  .toast { display:none; position:fixed; bottom:18px; left:50%; transform:translateX(-50%); max-width:90%; background:#17243a; color:white; padding:11px 16px; border-radius:12px; box-shadow:0 5px 20px rgba(0,0,0,.18); font-size:13px; z-index:10; text-align:center; }
+  .footer { display:flex; justify-content:space-between; align-items:center; gap:8px; margin-top:10px; font-size:11px; color:var(--muted); }
+  .reset { background:transparent; border:1px solid #d9dee5; border-radius:8px; padding:7px 9px; color:#5c6572; font-size:11px; }
+  @media (max-width:760px) {
+    body { padding:9px; }
+    .topbar { padding:14px; border-radius:14px; }
+    .brand { font-size:20px; }
+    #clock { font-size:23px; }
+    .grid { grid-template-columns:1fr 1fr; }
+    .agenda-card { grid-column:1 / -1; }
+  }
+  @media (max-width:480px) {
+    .grid { grid-template-columns:1fr; }
+    .agenda-card { grid-column:auto; }
+    .brand { font-size:18px; }
+    .tagline { font-size:10px; }
+    #clock { font-size:20px; }
+    .quick { gap:6px; }
+    .scene { font-size:11px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div>
+      <div class="brand">OUR HOME</div>
+      <div class="tagline">FAMILY • COMFORT • CONTROL</div>
+    </div>
+    <div class="datetime">
+      <div id="clock">--:--</div>
+      <div id="date">Loading date…</div>
+    </div>
+  </header>
+
+  <section class="weather">
+    <div><strong>☀️ Weather</strong> <span id="weatherText">Add your local forecast later</span></div>
+    <small>Brisbane / Redlands</small>
+  </section>
+
+  <main class="grid">
+    <section class="card agenda-card">
+      <h2>📅 Family today</h2>
+      <div class="sub">A starter agenda you can customise in the file later</div>
+      <div class="agenda-item"><div class="time">TODAY</div><div class="agenda-text">Family plans<small>Add appointments and activities here</small></div></div>
+      <div class="agenda-item"><div class="time">NEXT</div><div class="agenda-text">Upcoming jobs<small>School, sport, work and reminders</small></div></div>
+      <div class="agenda-item"><div class="time">NOTE</div><div class="agenda-text">Shared calendar<small>Calendar syncing can be added in a later version</small></div></div>
+      <div class="edit-note">This version does not connect to Google Calendar yet.</div>
+    </section>
+
+    <section class="card">
+      <h2>🏠 Smart home</h2>
+      <div class="sub">Demo controls — no devices connected yet</div>
+      <div class="device-grid">
+        <button class="device" data-device="Living Room Lights" data-state="off"><span class="emoji">💡</span><strong>Living room</strong><span class="state">Not connected</span></button>
+        <button class="device" data-device="Bedroom Lights" data-state="off"><span class="emoji">🛏️</span><strong>Bedroom lights</strong><span class="state">Not connected</span></button>
+        <button class="device" data-device="Air Conditioning" data-state="off"><span class="emoji">❄️</span><strong>Air conditioning</strong><span class="state">Not connected</span></button>
+        <button class="device" data-device="Security Camera" data-state="off"><span class="emoji">📷</span><strong>Security camera</strong><span class="state">Not connected</span></button>
+        <button class="device" data-device="Blinds" data-state="off"><span class="emoji">🪟</span><strong>Blinds / curtains</strong><span class="state">Not connected</span></button>
+        <button class="device" data-device="All Lights" data-state="off"><span class="emoji">✨</span><strong>All lights</strong><span class="state">Not connected</span></button>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>🛒 Shopping list</h2>
+      <div class="list-row"><input id="shoppingInput" type="text" placeholder="Add an item…" aria-label="Shopping item"><button class="add" id="addShopping" aria-label="Add shopping item">+</button></div>
+      <ul class="items" id="shoppingList"></ul>
+      <div class="empty" id="shoppingEmpty">Your list is empty. Add your first item above.</div>
+    </section>
+
+    <section class="card">
+      <h2>✅ Household jobs</h2>
+      <div class="list-row"><input id="jobsInput" type="text" placeholder="Add a job…" aria-label="Household job"><button class="add" id="addJob" aria-label="Add household job">+</button></div>
+      <ul class="items" id="jobsList"></ul>
+      <div class="empty" id="jobsEmpty">Add chores or reminders for the family.</div>
+    </section>
+
+    <section class="card">
+      <h2>⭐ Nice to sort</h2>
+      <div class="sub">Ideas, jobs and things to remember</div>
+      <div class="list-row"><input id="ideasInput" type="text" placeholder="Add a reminder…" aria-label="Reminder"><button class="add" id="addIdea" aria-label="Add reminder">+</button></div>
+      <ul class="items" id="ideasList"></ul>
+      <div class="empty" id="ideasEmpty">Keep non-urgent tasks here.</div>
+    </section>
+  </main>
+
+  <section class="quick">
+    <button class="scene" data-scene="Good Morning">☀️ GOOD MORNING</button>
+    <button class="scene" data-scene="Away">🚪 AWAY</button>
+    <button class="scene" data-scene="Bedtime">🌙 BEDTIME</button>
+  </section>
+
+  <div class="notice">Version 1 • Your lists are saved in this browser on this iPad only.<br>Smart-home tiles and scene buttons are prototypes until connected to real devices.</div>
+  <div class="footer"><span>OUR HOME DASHBOARD</span><button class="reset" id="resetDemo">Reset demo data</button></div>
+</div>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+(function () {
+  var storageOK = true;
+  function getSaved(key, fallback) {
+    try {
+      var raw = window.localStorage.getItem(key);
+      return raw ? JSON.parse(raw) : fallback;
+    } catch (e) { storageOK = false; return fallback; }
+  }
+  function save(key, value) {
+    try { window.localStorage.setItem(key, JSON.stringify(value)); }
+    catch (e) { storageOK = false; }
+  }
+  function updateClock() {
+    var now = new Date();
+    var time = now.toLocaleTimeString([], {hour:'numeric', minute:'2-digit'});
+    var date = now.toLocaleDateString([], {weekday:'long', day:'numeric', month:'long'});
+    document.getElementById('clock').textContent = time;
+    document.getElementById('date').textContent = date;
+  }
+  updateClock();
+  window.setInterval(updateClock, 30000);
+
+  var lists = {
+    shopping: getSaved('ourHomeShopping', []),
+    jobs: getSaved('ourHomeJobs', []),
+    ideas: getSaved('ourHomeIdeas', [])
+  };
+  var labels = {shopping:'Shopping list', jobs:'Household jobs', ideas:'Nice to sort'};
+  function showToast(message) {
+    var toast = document.getElementById('toast');
+    toast.textContent = message;
+    toast.style.display = 'block';
+    window.setTimeout(function () { toast.style.display = 'none'; }, 2600);
+  }
+  function renderList(type) {
+    var ul = document.getElementById(type + 'List');
+    var empty = document.getElementById(type + 'Empty');
+    ul.innerHTML = '';
+    empty.style.display = lists[type].length ? 'none' : 'block';
+    for (var i = 0; i < lists[type].length; i++) {
+      (function (index) {
+        var item = lists[type][index];
+        var li = document.createElement('li');
+        if (item.done) { li.className = 'done'; }
+        var check = document.createElement('input');
+        check.type = 'checkbox';
+        check.checked = !!item.done;
+        check.setAttribute('aria-label', 'Mark ' + item.text + ' complete');
+        check.addEventListener('change', function () {
+          lists[type][index].done = check.checked;
+          save('ourHome' + type.charAt(0).toUpperCase() + type.slice(1), lists[type]);
+          renderList(type);
+        });
+        var span = document.createElement('span');
+        span.className = 'item-text';
+        span.textContent = item.text;
+        var del = document.createElement('button');
+        del.className = 'delete';
+        del.textContent = '×';
+        del.setAttribute('aria-label', 'Delete ' + item.text);
+        del.addEventListener('click', function () {
+          lists[type].splice(index, 1);
+          save('ourHome' + type.charAt(0).toUpperCase() + type.slice(1), lists[type]);
+          renderList(type);
+        });
+        li.appendChild(check); li.appendChild(span); li.appendChild(del);
+        ul.appendChild(li);
+      })(i);
+    }
+  }
+  function addItem(type, inputId) {
+    var input = document.getElementById(inputId);
+    var value = input.value.replace(/^\s+|\s+$/g, '');
+    if (!value) { input.focus(); return; }
+    lists[type].push({text:value, done:false});
+    save('ourHome' + type.charAt(0).toUpperCase() + type.slice(1), lists[type]);
+    input.value = '';
+    renderList(type);
+    input.focus();
+  }
+  document.getElementById('addShopping').addEventListener('click', function () { addItem('shopping','shoppingInput'); });
+  document.getElementById('addJob').addEventListener('click', function () { addItem('jobs','jobsInput'); });
+  document.getElementById('addIdea').addEventListener('click', function () { addItem('ideas','ideasInput'); });
+  [['shoppingInput','shopping','addShopping'],['jobsInput','jobs','addJob'],['ideasInput','ideas','addIdea']].forEach(function (entry) {
+    document.getElementById(entry[0]).addEventListener('keydown', function (event) {
+      if (event.key === 'Enter') { document.getElementById(entry[2]).click(); }
+    });
+  });
+  renderList('shopping'); renderList('jobs'); renderList('ideas');
+
+  var devices = document.querySelectorAll('.device');
+  for (var d = 0; d < devices.length; d++) {
+    devices[d].addEventListener('click', function () {
+      showToast(this.getAttribute('data-device') + ': demo only — no smart device connected yet.');
+    });
+  }
+  var scenes = document.querySelectorAll('.scene');
+  for (var s = 0; s < scenes.length; s++) {
+    scenes[s].addEventListener('click', function () {
+      showToast(this.getAttribute('data-scene') + ': scene placeholder — automations can be added later.');
+    });
+  }
+  document.getElementById('resetDemo').addEventListener('click', function () {
+    if (window.confirm('Clear all shopping items, household jobs and reminders saved on this iPad?')) {
+      lists = {shopping:[], jobs:[], ideas:[]};
+      save('ourHomeShopping', lists.shopping);
+      save('ourHomeJobs', lists.jobs);
+      save('ourHomeIdeas', lists.ideas);
+      renderList('shopping'); renderList('jobs'); renderList('ideas');
+      showToast('Dashboard lists cleared.');
+    }
+  });
+  if (!storageOK) {
+    showToast('Note: this browser may not allow saving lists in this viewing mode.');
+  }
+})();
+</script>
+</body>
+</html>
